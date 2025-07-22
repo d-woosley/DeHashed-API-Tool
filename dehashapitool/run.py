@@ -18,33 +18,14 @@ def build_query(args):
     queries = []
     wildcard = False
     for key, value in vars(args).items():
-        if key in ['address', 'email', 'hashed_password', 'ip_address', 'name', 'password', 'phone', 'username', 'vin', 'domain']:                    
+        if key in ['address', 'email', 'hashed_password', 'ip_address', 'name', 'password', 'phone', 'username', 'vin', 'domain']:
             if value:
-                if key == 'email':
-                    # Regexing/Wildcarding emails requires that you split the query into email and domain.
-                    if check_wildcard(value) or args.regex:
-                        email, domain = value.split("@")
-                        queries.append(f"email:{email}@{domain}")
-                        queries.append(f"domain:{domain}")
-                        if not args.regex:
-                            wildcard = True
-                        if not args.regex and "*" in value:  # At the time of writing (MAy 2025) searches using "*" seems to be broken
-                            print(f"  {RED}[!] Searching using \"*\" seems to be broken in the Dehashed API side (as of May 2025). Use \"?\" instead of single character wildcards{RESET}") 
-                            if accept_prompt(prompt='    [-] Would you like to continue with the request (y/n): '):
-                                break
-                            else:
-                                exit()
-                        continue
+                if not args.regex and check_wildcard(value):
+                    wildcard = True
+                    if not accept_prompt(prompt='  [!] As of July 2025, wildcard API calls sometimes yield false negatives and errors. Would you like to proceed (y/n)?: '):
+                        exit()
 
-                if not args.regex:
-                    if check_wildcard(value):
-                        wildcard = True
-                
-                if key == 'domain':
-                    queries.append(f"{key}:{value}")  # Domains will not accept searches in quotes
-                    continue
-
-                queries.append(f"{key}:\"{value}\"")
+                queries.append(f"{key}:{value}")
     
     return "&".join(queries), wildcard
 
