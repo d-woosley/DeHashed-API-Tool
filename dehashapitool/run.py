@@ -30,12 +30,10 @@ def build_query(args):
                             wildcard = True
                         if not args.regex and "*" in value:  # At the time of writing (MAy 2025) searches using "*" seems to be broken
                             print(f"  {RED}[!] Searching using \"*\" seems to be broken in the Dehashed API side (as of May 2025). Use \"?\" instead of single character wildcards{RESET}") 
-                            while True:
-                                proceed = input("    [-] Would you like to continue with the request (y/n): ")
-                                if proceed.lower() == "y" or proceed.lower()== "yes":
-                                    break
-                                if proceed.lower() == "n" or proceed.lower()== "no":
-                                    exit()
+                            if accept_prompt(prompt='    [-] Would you like to continue with the request (y/n): '):
+                                break
+                            else:
+                                exit()
                         continue
 
                 if not args.regex:
@@ -43,7 +41,7 @@ def build_query(args):
                         wildcard = True
                 
                 if key == 'domain':
-                    queries.append(f"{key}:{value}")  # Domains will not except searches in quotes
+                    queries.append(f"{key}:{value}")  # Domains will not accept searches in quotes
                     continue
 
                 queries.append(f"{key}:\"{value}\"")
@@ -211,18 +209,27 @@ def recursive_search(query: str, size: int, wildcard: bool, regex: bool, api_key
         # Sanity check calls to prevent burning all you API keys
         if not unlimited_calls and (total / size) > 25:
             api_calls = math.ceil(total / size)
-            while True:
-                proceed = input(f"  {RED}[!] You are about to make {api_calls} API calls. Are you sure you want to continue? (y/n): {RESET}")
-                if proceed.lower() == "y" or proceed.lower()== "yes":
-                    unlimited_calls = True
-                    break
-                if proceed.lower() == "n" or proceed.lower()== "no":
-                    exit()
+            api_call_prompt = f"  {RED}[!] You are about to make {api_calls} API calls. Are you sure you want to continue? (y/n): {RESET}"
+            if accept_prompt(prompt=api_call_prompt):
+                unlimited_calls = True
+            else:
+                exit()
 
         # Avoid breaking DeHashed ratelimit
         sleep(0.1)
 
     return balance, entries
+
+
+def accept_prompt(prompt: str) -> bool:
+    while True:
+        proceed = input(prompt)
+        if proceed.lower() == "y" or proceed.lower()== "yes":
+            return True
+        elif proceed.lower() == "n" or proceed.lower()== "no":
+            return False
+        else:
+            print(f"  {RED}[!] Input not recognized. Please input \"y\" or \"n\": {RESET}")
 
 def main():
     args = load_args()
