@@ -47,8 +47,9 @@ dat -u username
 
 ### Options:
 ```
-usage: dehashapitool [-h] [-a ADDRESS] [-e EMAIL] [-H HASHED_PASSWORD] [-i IP_ADDRESS] [-n NAME] [-p PASSWORD] [-P PHONE] [-u USERNAME] [-v VIN] [-d DOMAIN] [-o OUTPUT] [-oS OUTPUT_SILENTLY]
-                     [-s SIZE] [--only-passwords] [--regex] [--key [DEHASHED_KEY]] [--store-key]
+usage: dehashapitool [-h] [-a ADDRESS] [-e EMAIL] [-H HASHED_PASSWORD] [-i IP_ADDRESS] [-n NAME] [-p PASSWORD] [-P PHONE] [-u USERNAME]
+                     [-v VIN] [-d DOMAIN] [-o OUTPUT] [-oS OUTPUT_SILENTLY] [-s SIZE] [--only-passwords] [--regex] [--recursive]
+                     [--key [DEHASHED_KEY]] [--store-key]
 
 Query the Dehashed API
 
@@ -79,6 +80,7 @@ options:
   -s SIZE, --size SIZE  Specify the size, between 1 and 10000
   --only-passwords      Return only passwords
   --regex               Use regex search instead of string (seems to be broken as of May 2025)
+  --recursive           Automaitically make unlimited recursive API calls for full query data (BE CAREFUL)
 
 API Arguments:
   Arguments related to Dehashed API credentials
@@ -133,7 +135,7 @@ The above will return all passwords for the queried domain, sorted alphabeticall
 
 The above will return 10 results utilizing the wildcard
 
-> **Note**: As of May 2025, the wildcard search using "*" seems to be broken in the V2 API.
+> **Note**: As of July 2025, the wildcard search using "*" works in some cases but will also often times throw unexpected errors or results in false negatives.
 
 ## Contributions
 Contributions are always welcome! Please open an issue or submit a pull request.
