@@ -112,6 +112,7 @@ def load_args():
     parser.add_argument('-s', '--size', type=int, default=10000, help="Specify the size, between 1 and 10000")
     parser.add_argument('--only-passwords', action="store_true", help="Return only passwords")
     parser.add_argument('--regex', action="store_true", help="Use regex search instead of string (seems to be broken as of May 2025)")
+    parser.add_argument('--recursive', action="store_true", help="Automaitically make unlimited recursive API calls for full query data (BE CAREFUL)")
 
     # Dehashed API credential arguments
     api_group = parser.add_argument_group('API Arguments', 'Arguments related to Dehashed API credentials')
@@ -164,12 +165,15 @@ def load_args():
     
     return args
 
-def recursive_search(query: str, size: int, wildcard: bool, regex: bool, api_key: str):
+def recursive_search(query: str, size: int, wildcard: bool, regex: bool, api_key: str, recursive: bool):
     entries = []
     balance = 0
     total = 0
     page_num = 0
     unlimited_calls = False
+    if recursive:
+        unlimited_calls = True
+    
     while True:
         page_num += 1
         response = v2_search(
@@ -207,11 +211,14 @@ def recursive_search(query: str, size: int, wildcard: bool, regex: bool, api_key
             break
 
         # Sanity check calls to prevent burning all you API keys
-        if not unlimited_calls and (total / size) > 25:
+        if not unlimited_calls and (total / size) > 1:
             api_calls = math.ceil(total / size)
-            api_call_prompt = f"  {RED}[!] You are about to make {api_calls} API calls. Are you sure you want to continue? (y/n): {RESET}"
+            remaining_calls = round(api_calls - (len(entries) / size))
+            print(f"  {GREY}[-] {len(entries)} Dehashed entries collected{RESET}")
+            api_call_prompt = f"  [-] {remaining_calls} API calls remain to collect all the data from this query. Would you like to make another API call ({balance} API credits remaining)? (y/n): {RESET}"
             if accept_prompt(prompt=api_call_prompt):
-                unlimited_calls = True
+                print(f"  {GREY}[i] Note that you can use --recursive to automatically make all requests")
+                continue
             else:
                 exit()
 
@@ -239,7 +246,8 @@ def main():
         size=args.size,
         wildcard=wildcard,
         regex=args.regex,
-        api_key=args.dehashed_key
+        api_key=args.dehashed_key,
+        recursive=args.recursive
         )
     
     if not entries:
