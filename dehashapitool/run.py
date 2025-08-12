@@ -285,7 +285,12 @@ def main():
                 writer = csv.DictWriter(csvfile, fieldnames=sorted_all_keys)
                 writer.writeheader()
                 for entry in sorted(entries, key=lambda x: flatten_list(x.get(primary_key, "")).lower()):
-                    writer.writerow({k: flatten_list(entry[k]) for k in sorted_all_keys if k in entry and entry[k] and entry[k] != "null"})
+                    if args.domain:
+                        row = {k: flatten_list(entry[k]) for k in sorted_all_keys if k in entry and entry[k] and entry[k] != "null"}
+                        row['domain'] = args.domain
+                        writer.writerow(row)
+                    else:
+                        writer.writerow({k: flatten_list(entry[k]) for k in sorted_all_keys if k in entry and entry[k] and entry[k] != "null"})
 
     if args.output_silently:
         print(f"\n{GREY}[-] Results returned and saved in {args.output_silently}{RESET}")
