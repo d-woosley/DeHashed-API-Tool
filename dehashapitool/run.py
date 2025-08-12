@@ -94,6 +94,7 @@ def load_args():
     parser.add_argument('--only-passwords', action="store_true", help="Return only passwords")
     parser.add_argument('--regex', action="store_true", help="Use regex search instead of string (seems to be broken as of May 2025)")
     parser.add_argument('--recursive', action="store_true", help="Automaitically make unlimited recursive API calls for full query data (BE CAREFUL)")
+    parser.add_argument('--summary', action="store_true", help="Display summary of results rather than printing them to the screen (Use with -o flag)")
 
     # Dehashed API credential arguments
     api_group = parser.add_argument_group('API Arguments', 'Arguments related to Dehashed API credentials')
@@ -143,6 +144,10 @@ def load_args():
     if not 1 <= args.size <= 10000:
         parser.error("[!] Size value should be between 1 and 10000.")
         exit()
+
+    if args.summary and not args.output:
+        prompt = f"  {RED}[!] Summary was selected but no output was set; you will not save the search results. Are you sure you want to proceed? (y/n): {RESET}"
+        exit() if not accept_prompt(prompt) else None
     
     return args
 
@@ -256,9 +261,13 @@ def main():
     elif not args.output_silently:
         for key in sorted_keys:
             values = list(set([flatten_list(entry[key]).lower() for entry in entries if key in entry and entry[key]]))
-            if values:
-                values.sort()
-                print(f"\n  {BLUE}[{key}s]{RESET}: {', '.join(values)}")
+
+            if args.summary:
+                print(f"  {BLUE}[{key}s]{RESET}: {len(values)}")
+            else:
+                if values:
+                    values.sort()
+                    print(f"\n  {BLUE}[{key}s]{RESET}: {', '.join(values)}")
 
     if not args.output_silently:
         print(f"\n{GREY}[-] You have {balance} API credits remaining.{RESET}")
